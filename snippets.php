@@ -15,7 +15,7 @@ if ($conn->connect_error) {
 ?>
 
 
-2. Need to redirect your users to another page?
+2. Redirect
 header("Location: https://www.yourwebsite.com");
     exit;
 
@@ -35,11 +35,12 @@ $conn->close();
 
 
 3. Simple registration form
-  <?php 
-    session_start();
+    <?php 
+    require_once("connect.php");
+    require_once("header.php");
     if (isset($_POST['submit'])) {
         $email = $_POST['email'];
-        $password = $_POST['password'];
+        $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
         $mobile = $_POST['mobile'];
         $query="insert into users (login,password,mobile) VALUES ('$email','$password','$mobile')";
         $result=mysqli_query($conn,$query);
@@ -49,13 +50,12 @@ $conn->close();
             $row=$request->fetch_assoc();
             $id = $row["id"];
             $_SESSION["userid"]=$id;
-            print($query);
-            print($id);
+            header('Location: index.php?newuser=true');
             die(mysqli_error($conn));
         }
 
-        }
-?>
+    }
+    ?>
 
 
 <div class="container">
@@ -117,3 +117,52 @@ $conn->close();
 
                   <?php } ?>
               </form>
+
+6. call modal js
+
+    <script>
+        $(document).ready(function(){
+            $('#myModal').modal('show');
+            });
+        </script>";
+
+7.login form check
+    <?php
+    include_once "connect.php";
+    require_once("header.php");
+    if(isset($_POST['submit'])){
+    $login = $_POST['login'];
+    $password = $_POST['password'];
+
+    // Check connection
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+
+    // Retrieve stored user credentials from the database
+    $sql = "SELECT * FROM users WHERE login = '$login'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $hashed_password = $row['password'];
+
+        // Verify the password
+        if (password_verify($password, $hashed_password)) {
+            header('Location: index.php?success=true');
+        } else {?>
+            <script>
+        $(document).ready(function(){
+            $('#myModal').modal('show');
+            });
+        </script>";
+        <?php
+        }
+    } else {
+        echo "User not found.";
+    }
+}
+    $conn->close();
+?>
+
+
